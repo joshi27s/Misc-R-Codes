@@ -1,0 +1,175 @@
+---
+title: "Hansen Exercise 10.28"
+author: "Austin Craig"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lmtest)
+library(sandwich)
+library(boot)
+```
+
+```{r data setup}
+#Load the data
+setwd("C:/Users/Austin/OneDrive - UW/Spring 2022/ECON 582/Assignments/HW1 Code")
+loadPath = getwd()
+fileName = paste(loadPath, "/Nerlove1963.txt", sep="")
+df = read.table(fileName, header=TRUE)
+
+#Create necessary logged variables
+df$logC = log(df$Cost) #log cost
+df$logQ = log(df$output) #log output
+df$logPL = log(df$Plabor) #log unit price of labor
+df$logPK = log(df$Pcapital) #log unit price of capital
+df$logPF = log(df$Pfuel) #log unit price of fuel
+
+```
+
+### Part A: Regression Estimation
+
+```{r ols}
+
+set.seed(123)
+
+#Estimate model by OLS
+ols = lm(logC ~ logQ + logPL + logPK + logPF, data=df)
+#Report heteroskedasticity-robust standard errors
+coeftest(ols, vcov=vcovHC(ols, type="HC2"))
+
+```
+
+
+```{r jackknife}
+#Estimate jackknife standard errors
+
+n = nrow(df)
+#init jackknife beta matrix
+betahat_j = matrix(0,n,5)
+
+for (i in 1:n) {
+  tmpData = df[-i,]
+  tmpModel = lm(logC ~ logQ + logPL + logPK + logPF, data=tmpData)
+  betahat_j[i,] = coef(tmpModel)
+}
+
+#calculate jackknife standard errors
+betahat_bar_j = colMeans(betahat_j)
+#sweep takes the difference of betahat_i_k and the mean of betahat_k for all i
+sehat_betahat_j = sqrt(((n-1)/n)*colSums(sweep(betahat_j, 2, betahat_bar_j)^2))
+sehat_betahat_j
+```
+
+```{r bootstrap}
+#Estimate bootstrap standard errors
+
+B=10000
+#init bootstrap beta matrix
+betahat_b = matrix(0,B,5)
+
+for (i in 1:B) {
+  idx = sample(n, size=n, replace=TRUE)
+  tmpData = df[idx,]
+  tmpModel = lm(logC ~ logQ + logPL + logPK + logPF, data=tmpData)
+  betahat_b[i,] = coef(tmpModel)
+}
+
+#calculate bootstrap standard errors
+sehat_betahat_b = apply(betahat_b,2,sd)
+sehat_betahat_b
+```
+
+<br>
+
+### Part B: Estimation of $\theta=\beta_3+\beta_4+\beta_5$
+
+First, we will calculate a point estimate $\hat{\theta}$ using the results of the OLS regression in Part A:
+
+```{r thetahat estimate}
+betahat = coef(ols)
+thetahat = betahat[3] + betahat[4] + betahat[5]
+```
+Which results in an estimate $\hat{\theta}$ = `r thetahat`
+
+
+We are now interested in an estimate of the standard error of $\hat{\theta}$, $\sqrt{\hat{V}_{\hat{\theta}}}$. To calculate this, first notice that we can apply the delta method to show that $\sqrt{n}(\hat{\theta}-\theta)$ is asymptotically normally distributed with variance $V_{\theta}=R'V_{\beta}R$, where $R=\frac{\partial \theta}{\partial \beta}=(0,0,1,1,1)'$. Thus, we have $\hat{V}_{\hat{\theta}}=\hat{R}'\hat{V}_{\hat{\beta}}\hat{R}$ and we can calculate the asymptotic standard error as follows:
+
+```{r asymptotic theta}
+Vhat_betahat = vcovHC(ols, type="HC2")
+Rhat = c(0,0,1,1,1)
+Vhat_thetahat = Rhat%*%Vhat_betahat%*%Rhat
+sehat_thetahat_a = sqrt(Vhat_thetahat)
+```
+Which results in $\hat{se}(\hat{\theta})=\sqrt{\hat{V}_{\hat{\theta}}}$ = `r sehat_thetahat_a`.
+
+Next, we compute a jackknife standard error estimate for $\hat{\theta}$:
+
+```{r theta jackknife}
+#Estimate jackknife for theta
+
+n = nrow(df)
+#init jackknife theta vector
+thetahat_j = rep(0,n)
+
+for (i in 1:n) {
+  tmpData = df[-i,]
+  tmpModel = lm(logC ~ logQ + logPL + logPK + logPF, data=tmpData)
+  betahat = coef(tmpModel)
+  thetahat_j[i] = betahat[3] + betahat[4] + betahat[5]
+}
+
+#calculate jackknife standard errors
+thetahat_bar_j = mean(thetahat_j)
+sehat_thetahat_j = sqrt(((n-1)/n)*sum((thetahat_j - thetahat_bar_j)^2))
+```
+Our jackknife estimates are $\hat{\theta}$ = `r thetahat_bar_j` and $\hat{se}(\hat{\theta})$ = `r sehat_thetahat_j`.
+
+Finally, we compute a bootstrap standard error estimate for $\hat{\theta}$:
+
+```{r theta bootstrap}
+#Estimate bootstrap for theta
+
+B=10000
+#init bootstrap theta vector
+thetahat_b = rep(0,B)
+
+for (i in 1:B) {
+  idx = sample(n, size=n, replace=TRUE)
+  tmpData = df[idx,]
+  tmpModel = lm(logC ~ logQ + logPL + logPK + logPF, data=tmpData)
+  betahat = coef(tmpModel)
+  thetahat_b[i] = betahat[3] + betahat[4] + betahat[5]
+}
+
+#calculate bootstrap standard errors
+thetahat_bar_b = mean(thetahat_b)
+sehat_thetahat_b = sd(thetahat_b)
+```
+Our bootstrap estimates are $\hat{\theta}$ = `r thetahat_bar_b` and $\hat{se}(\hat{\theta})$ = `r sehat_thetahat_b`.
+
+<br>
+
+### Part C: Confidence Intervals for $\theta$
+
+We use the \emph{boot} package to calculate percentile and BCA 95% confidence intervals:
+
+```{r theta function}
+theta_boot_fn = function(x, idx) {
+  tmpData = x[idx,]
+  tmpModel = lm(logC ~ logQ + logPL + logPK + logPF, data=tmpData)
+  betahat = coef(tmpModel)
+  thetahat_b = betahat[3] + betahat[4] + betahat[5]
+  return(thetahat_b)
+}
+```
+
+```{r boot package bootstrap}
+theta_boot = boot(df,statistic=theta_boot_fn,R=10000)
+boot.ci(theta_boot, conf=0.95, type=c("perc", "bca"))
+```
+
+
+
+
