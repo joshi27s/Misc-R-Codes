@@ -1,0 +1,344 @@
+---
+title: "ECON582-HW1"
+author: "Zahra"
+date: "05/04/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Starting HW1
+```{r}
+suppressPackageStartupMessages(library(bootstrap))
+suppressPackageStartupMessages(library(lmtest))
+suppressPackageStartupMessages(library(car))
+suppressPackageStartupMessages(library(mvtnorm))
+suppressPackageStartupMessages(library(boot))
+
+```
+
+```{r}
+library(mvtnorm)
+
+mu = c(1,1)
+sigma = diag(c(0.25^2, 1))
+set.seed(123)
+n=50
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+mu1_hat = mean(y[,1])
+mu2_hat = mean(y[,2])
+sigma_hat = cov(y)
+sigma_hat
+theta_hat = mu1_hat/mu2_hat
+theta_hat
+```
+
+## Part 1: Monte Carlo simulation:
+Run a Monte Carlo simulation with N = 10,000 simulations, to numerically compute the standard error of $\hat{θ}$ and to compute a 95% confidence interval based on the empirical quantiles of the Monte Carlo estimates values of θ. The Monte Carlo simulation approximates the exact sampling distribution of $\hat{θ}$. Hence, the Monte Carlo standard error and confidence intervals can be taken as the “true results”.
+
+```{r}
+mu = c(1,1)
+sigma = diag(c(0.25^2, 1))
+n = 50
+N = 10000
+set.seed(123)
+sim.theta = rep(0,N)   # coefficients
+
+for (sim in 1:N) {
+  # simulate data
+  y = rmvnorm(n, mean=mu, sigma=sigma)
+  # fit regression, extract coefficients, compute t-stats and p-values
+	mu1_hat = mean(y[,1])
+  mu2_hat = mean(y[,2])
+  theta_hat = mu1_hat/mu2_hat
+  sigma_hat = cov(y)
+  
+	sim.theta[sim] = theta_hat
+}
+
+sd(sim.theta)
+```
+##TODO (UP): confidence interval is left!
+
+
+## Part 2 Detlta Method
+Use the delta method to compute an asymptotic standard error for $\hat{θ}$ and an asymptotic 95% confidence interval. Check your analytic delta method results with the numerical delta method using the car function deltaMethod() (see the R notebook resamplingExamples.Rmd for details on using the function deltaMethod()).
+
+
+### Analytical Delta Method:
+```{r} 
+R=c(1/mu1_hat, -mu1_hat/(mu2_hat^2)) 
+V_hat= (1/n)*t(R)%*% sigma_hat %*% R 
+se.theta_hat_a = sqrt(V_hat)
+se.theta_hat_a
+```
+
+### Numerical Delta method (using car function deltaMethod())
+```{r}
+bhat = c(mu1_hat, mu2_hat)
+names(bhat)=c("mu1_hat","mu2_hat") 
+V_hat=sigma_hat/n 
+se.theta_hat_n=deltaMethod(bhat, "mu1_hat/mu2_hat", V_hat) 
+se.theta_hat_n
+```
+
+
+
+## Part 3: Jacknife:
+
+```{r}
+n = 50
+set.seed(123)
+y = rmvnorm(n, mean=mu, sigma=sigma)
+thetahat_j = rep(0, 1)
+mu1_hat_j = rep(0,n)
+mu2_hat_j = rep(0,n)
+
+# jackknife for loop
+for(i in 1:n) {
+  tmpData.df = y[-i,]
+  mu1_hat_j[i] = mean(tmpData.df[,1])
+  mu2_hat_j[i] = mean(tmpData.df[,2])
+  thetahat_j[i] = mu1_hat_j[i]/mu2_hat_j[i]
+}
+thetahatbar_j = mean(thetahat_j)
+Vthetahat_j = ((n-1)/n)*sum((thetahat_j - thetahatbar_j)^2)
+sethetahat_j = sqrt(Vthetahat_j)
+thetahatbar_j
+sethetahat_j
+```
+
+
+## Part 4: Non-parametric Bootstrap:
+Use the non-parametric bootstrap with B = 10,000 to compute a standard estimate for $\theta{θ}$, and compute normal, percentile and BCA percentile 95% confidence intervals. Do the bootstrap with 5 different random number seeds (123, 124, 125, 126, 127) and compare the results.
+
+##### 1: seed=123
+
+```{r}
+set.seed(123)
+B = 10000
+n = 50
+thetahat_b = rep(0, B)
+mu1_hat_b = rep(0,B)
+mu2_hat_b = rep(0,B)
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+# bootstrap for loop
+for(i in 1:B) {
+  idx = sample(n, replace=TRUE)
+  tmpData.df = y[idx, ]
+  mu1_hat_b[i] = mean(tmpData.df[,1])
+  mu2_hat_b[i] = mean(tmpData.df[,2])
+  thetahat_b[i] = mu1_hat_b[i]/mu2_hat_b[i]
+}
+# compute bootstrap se & mean
+thetahatbar_b = mean(thetahat_b)
+Vthetahat_b = (1/(B-1))*sum((thetahat_b - thetahatbar_b)^2)
+sethetahat_b = sqrt(Vthetahat_b)
+thetahatbar_b
+sethetahat_b
+```
+##### 2: seed=124
+
+```{r}
+set.seed(124)
+B = 10000
+n = 50
+thetahat_b = rep(0, B)
+mu1_hat_b = rep(0,B)
+mu2_hat_b = rep(0,B)
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+# bootstrap for loop
+for(i in 1:B) {
+  idx = sample(n, replace=TRUE)
+  tmpData.df = y[idx, ]
+  mu1_hat_b[i] = mean(tmpData.df[,1])
+  mu2_hat_b[i] = mean(tmpData.df[,2])
+  thetahat_b[i] = mu1_hat_b[i]/mu2_hat_b[i]
+}
+# compute bootstrap se & mean
+thetahatbar_b = mean(thetahat_b)
+Vthetahat_b = (1/(B-1))*sum((thetahat_b - thetahatbar_b)^2)
+sethetahat_b = sqrt(Vthetahat_b)
+thetahatbar_b
+sethetahat_b
+```
+##### 3: seed=125
+
+```{r}
+set.seed(125)
+B = 10000
+n = 50
+thetahat_b = rep(0, B)
+mu1_hat_b = rep(0,B)
+mu2_hat_b = rep(0,B)
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+# bootstrap for loop
+for(i in 1:B) {
+  idx = sample(n, replace=TRUE)
+  tmpData.df = y[idx, ]
+  mu1_hat_b[i] = mean(tmpData.df[,1])
+  mu2_hat_b[i] = mean(tmpData.df[,2])
+  thetahat_b[i] = mu1_hat_b[i]/mu2_hat_b[i]
+}
+# compute bootstrap se & mean
+thetahatbar_b = mean(thetahat_b)
+Vthetahat_b = (1/(B-1))*sum((thetahat_b - thetahatbar_b)^2)
+sethetahat_b = sqrt(Vthetahat_b)
+thetahatbar_b
+sethetahat_b
+```
+
+##### 4: seed=126
+
+```{r}
+set.seed(126)
+B = 10000
+n = 50
+thetahat_b = rep(0, B)
+mu1_hat_b = rep(0,B)
+mu2_hat_b = rep(0,B)
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+# bootstrap for loop
+for(i in 1:B) {
+  idx = sample(n, replace=TRUE)
+  tmpData.df = y[idx, ]
+  mu1_hat_b[i] = mean(tmpData.df[,1])
+  mu2_hat_b[i] = mean(tmpData.df[,2])
+  thetahat_b[i] = mu1_hat_b[i]/mu2_hat_b[i]
+}
+# compute bootstrap se & mean
+thetahatbar_b = mean(thetahat_b)
+Vthetahat_b = (1/(B-1))*sum((thetahat_b - thetahatbar_b)^2)
+sethetahat_b = sqrt(Vthetahat_b)
+thetahatbar_b
+sethetahat_b
+```
+##### 5: seed=127
+
+```{r}
+set.seed(127)
+B = 10000
+n = 50
+thetahat_b = rep(0, B)
+mu1_hat_b = rep(0,B)
+mu2_hat_b = rep(0,B)
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+# bootstrap for loop
+for(i in 1:B) {
+  idx = sample(n, replace=TRUE)
+  tmpData.df = y[idx, ]
+  mu1_hat_b[i] = mean(tmpData.df[,1])
+  mu2_hat_b[i] = mean(tmpData.df[,2])
+  thetahat_b[i] = mu1_hat_b[i]/mu2_hat_b[i]
+}
+# compute bootstrap se & mean
+thetahatbar_b = mean(thetahat_b)
+Vthetahat_b = (1/(B-1))*sum((thetahat_b - thetahatbar_b)^2)
+sethetahat_b = sqrt(Vthetahat_b)
+thetahatbar_b
+sethetahat_b
+```
+
+Plotting distribution of $\hat{\theta}$:
+```{r}
+par(mfrow=c(1,2))   
+hist(thetahat_b, col="cornflowerblue")   
+abline(v=thetahatbar_b, col="white", lwd=2)   
+qqnorm(thetahat_b, col="cornflowerblue")   
+qqline(thetahat_b)
+```
+
+## Confidence Intervals: 
+### Normal CIs:
+
+$C^{nb}=\hat{\theta}\pm 1.96\times s_\theta^{boot}=[\hat{\theta}- 1.96\times s_\theta^{boot}, \quad \hat{\theta}+ 1.96\times s_\theta^{boot}]$
+
+
+
+```{r}
+theta.boot = function(y, idx) {
+  tmpdata=y[idx,]
+  thetahat_b = mean(tmpdata[,1])/mean(tmpdata[,2])
+}
+```
+
+```{r}
+set.seed(123)
+y.df <- data.frame(y)
+thetahat.boot = boot(y.df, statistic=theta.boot,R=10000)
+boot.ci(thetahat.boot, conf=0.95, type=c("norm", "perc", "bca"))
+```
+```{r}
+set.seed(124)
+y.df <- data.frame(y)
+thetahat.boot = boot(y.df, statistic=theta.boot,R=10000)
+boot.ci(thetahat.boot, conf=0.95, type=c("norm", "perc", "bca"))
+```
+
+```{r}
+set.seed(125)
+y.df <- data.frame(y)
+thetahat.boot = boot(y.df, statistic=theta.boot,R=10000)
+boot.ci(thetahat.boot, conf=0.95, type=c("norm", "perc", "bca"))
+```
+
+```{r}
+set.seed(126)
+y.df <- data.frame(y)
+thetahat.boot = boot(y.df, statistic=theta.boot,R=10000)
+boot.ci(thetahat.boot, conf=0.95, type=c("norm", "perc", "bca"))
+```
+
+```{r}
+set.seed(127)
+y.df <- data.frame(y)
+thetahat.boot = boot(y.df, statistic=theta.boot,R=10000)
+boot.ci(thetahat.boot, conf=0.95, type=c("norm", "perc", "bca"))
+```
+
+
+### Parametric Bootstrap:
+
+```{r}
+set.seed(123)
+B = 10000
+n = 50
+y = rmvnorm(n, mean=mu, sigma=sigma)
+
+theta_hat = mean(y[,1])/mean(y[,2])
+sigma_hat = cov(y)
+thetahat_pb = matrix(0, B, 2)
+sigma2hat_pb = rep(0,B)
+
+y.df = data.frame(y)
+ys.fit = lm(y[,1] ~ y[,2], data=y.df)
+
+
+for (i in 1:B) {
+  y = rmvnorm(n, mean=mu, sigma=sigma)
+  y.df = data.frame(y)
+  ys.fit = lm(y[,1] ~ y[,2], data=y.df)
+
+  y1 = fitted(ys.fit)
+  y.df<- data.frame(y1, y[,2])
+  tmp.fit = lm(y1 ~ y[,2], data=y.df)
+  thetahat_pb[i, ] = coef(tmp.fit)
+  #sigma2hat_pb[i] = (summary(tmp.fit)$sigma^2)*(n-2/n)
+}
+
+# compute bootstrap mean & se
+
+thetahatbar_pb = mean(thetahat_pb[,1])
+sethetahat_pb = sd(thetahat_pb[,1])
+thetahatbar_pb
+sethetahat_pb
+```
+
