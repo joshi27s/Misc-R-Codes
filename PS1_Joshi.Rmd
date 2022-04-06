@@ -1,0 +1,413 @@
+---
+title: "R Codes"
+author: "Sudiksha Joshi"
+date: '2022-04-05'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r import, results=FALSE, message=FALSE}
+
+library(knitr) 
+library(data.table) 
+library(broom) # tabular representation of regression
+library(MASS)
+library(sandwich) # constructs HC covariance matrices
+library(tidyverse) # to manipulate data
+library(lmtest) # to test if coefficients are robust 
+library(mvtnorm) # samples from multivariate gaussian distribution
+library(boot)
+library(car)
+library(bootstrap)
+
+```
+
+### 10.28 
+
+### Import the data, log the variables and construct an OLS regression
+
+```{r}
+set.seed(111)
+
+# export the data from the link below
+
+site = 'https://www.ssc.wisc.edu/~bhansen/econometrics/Nerlove1963.txt'
+
+# converts all letters from upper to lower case
+data = fread(site) %>% rename_all(tolower)
+
+# transforms the variables by taking their logs and name each of the logged value as varname_ln
+data_ln = data %>% mutate_all(list('ln' = log))
+
+
+# create a an OLS regression model and estimate the params
+ols = lm(cost_ln ~ output_ln + plabor_ln + pcapital_ln + pfuel_ln, data = data_ln)
+
+# calulate a (5 by 5) hetero-consistent variance matrix
+var_robust = vcovHC(ols, type = "HC1")
+```
+
+
+### (a) Estimate the regression by unrestricted least squares and report standard errors calculated by asymptotic, jackknife and the bootstrap.
+```{r}
+
+jk_data = data_ln %>% mutate(id = row_number())
+
+
+# create a function to get jackknife estimates
+jk_est = map_dfr(c(1:nrow(jk_data)), function(x){
+  
+  
+jk_model = lm(cost_ln ~ output_ln + plabor_ln + pcapital_ln + pfuel_ln, data = jk_data %>% filter(id != x))
+  return(jk_model$coefficients)}) %>% rename_all(list(~ tolower(str_replace_all(., 
+                                            '\\(|\\)', 
+                                            '')))) %>% mutate(id = row_number())
+
+# get the means from the jackknife model => yields a vector of 5 numbers: 1 for each variable including the constant
+means_jk = jk_est %>% select(-id) %>% summarise_all(list('mean' = mean)) %>% pivot_longer(everything()) %>% pull(value)
+
+
+something = map(c(1:nrow(jk_data)), function(x){
+  df = jk_est %>% filter(id == x) %>% select(-id) %>% pivot_longer(everything()) %>% pull(value)
+  
+  return((df - means_jk) %*% t(df - means_jk))
+  
+})
+
+
+# obtain the (5 x 5) jackknife variance covariance matrix and its square root is the standard error
+var_jk = ((n-1)/n) * Reduce('+', something)
+se_jk = sqrt(diag(var_jk))
+
+# displays the OLS estimates with jackknife standard errors in a properly formatted table
+
+data.table('Parameters' = param_values$term, 'Estimates' = ols_est, 'Standard Error' = se_jk) %>% 
+  kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'OLS with Jackknife SEs')
+```
+
+### Construct Bootstrap Estimator for OLS
+```{r}
+
+# number of observations in each bootstrap sample
+Num = 500
+
+# function to generate the boostrap estimates from the regression model
+bootstrap_est = map_dfr(c(1:Num), function(y){
+  jk_model = lm(cost_ln ~ output_ln + plabor_ln + pcapital_ln + pfuel_ln, data = jk_data %>% dplyr::sample_n(size = nrow(jk_data),replace = TRUE))
+  return(jk_model$coefficients)
+}) %>% 
+  rename_all(list(~ tolower(str_replace_all(., 
+                                            '\\(|\\)', 
+                                            '')))) %>% 
+  mutate(id = row_number())
+
+
+# Construct means from the bootstrap distribution: mean of the sampling distribution of the bootstrap sample mean of each variable
+bootstrap_means = bootstrap_est %>% select(-id) %>% summarise_all(list('mean' = mean)) %>% pivot_longer(everything()) %>% pull(value)
+
+something = map(c(1:Num), function(x){
+  df = bootstrap_est %>% filter(id == x) %>% select(-id) %>% pivot_longer(everything()) %>% pull(value)
+  
+  return((df - bootstrap_means) %*% t(df - bootstrap_means))
+  
+})
+
+# (5 x 5) variance covariance matrix from the bootstrap distribution. The square root of its diagonal elements are the standard error
+var_boot = (1/(Num-1)) * Reduce('+', something)
+se_boot = sqrt(diag(var_boot))
+
+# Properly format the results in a table along with three types of standard errors: bootstrap, asymptotic and jackknife
+
+data.table('Variable' = param_values$term, 'OLS estimates' = ols_est, 'Asymptotic SE' = param_values$std.error, 'Jackknife SE' = se_jk, 'Bootstrap SE' = se_boot) %>% 
+  kable(., format = 'html', digits = 3, align = 'lrr', caption = 'OLS with Bootstrap SEs')
+```
+
+### (b) Estimate theta and report standard errors calculated by asymptotic, jackknife and the bootstrap.
+```{r}
+
+# sum of the beta parameters to obtain the value of the transformed variables theta
+theta = param_values %>% filter(term %in% c('plabor_ln', 'pcapital_ln', 'pfuel_ln')) %>% pull(estimate) %>% sum()
+
+# function to obtain the variance of the theta: measures uncertainty around the transformed parameter
+theta_var = function(vcov_mat){return(sqrt(sum(vcov_mat[3:5,3:5])))}
+
+# create a table to store the different types of standard errors
+data.table('theta' = theta, 'Asymptotic SE' = theta_var(var_robust), 'Jackknife SE' = theta_var(var_jk),  'Bootstrap SE' = theta_var(var_boot)) %>% 
+  kable(.,format = 'html', digits = 3, align = 'lrrr', caption = 'Estimates of the transformed variable Theta')
+```
+
+### (c) Report confidence intervals for theta using the percentile and BCa methods.
+```{r}
+
+# 500 values of bootstrapped theta after resampling with replacement from the original data 500 times given the regression model 
+bootstrap_theta = bootstrap_est %>% mutate(theta = plabor_ln + pcapital_ln + pfuel_ln) %>% pull()
+
+# get the 95 percent confidence intervals and format the results properly
+quantile(bootstrap_theta, c(.025, .975)) %>% t() %>% kable(., format = 'html', digits = 4, align = 'rr',caption = 'Using the Percentile Method to compute the Bootstrap Confidence Intervals')
+
+```
+
+
+
+```{r}
+
+# transformation of the variables theta = sum of betas = 1
+# similar to above except this leaves one out observation to obtain the kackknife estimates
+jk_theta = jk_est %>% mutate(theta = plabor_ln + pcapital_ln + pfuel_ln) %>% pull()
+
+# get the quantile from qnorm to calculate the confidence intervals
+dotp = sum(bootstrap_theta >= theta) / length(bootstrap_theta)
+quantile = qnorm(dotp)
+
+
+# average of all the 500 jackknife thetas
+theta_mean = mean(jk_theta)
+add = sum((theta_mean - jk_theta)^3) / (6 * (sum((theta_mean - jk_theta)^2)^(3/2))) 
+
+omegay = function(omega){quantile1 = qnorm(omega)
+  return(pnorm(quantile + (quantile1 + quantile) / (1 + add * (quantile1 + quantile))))
+}
+
+# obtain the 95 percent bootstrap confidence intervals 
+quantile(bootstrap_theta, c(omegay(.025), omegay(.975))) %>%  t() %>% kable(.,format = 'html', digits = 3,align = 'rr',caption = 'Bootstrapped Confidence Intervals from the BC Method')
+
+```
+
+
+### R Programming Question not from Hansen's textbook
+
+### Define the initial parameters of the multivariate distribution and simulate
+```{r}
+# sample 50 iid observations from y
+n_obs = 50
+mu = c(1,1)
+
+
+set.seed(123)
+
+# Simulate from a Multivariate Normal Distribution
+sigma = diag(c(0.25^2, 1))
+mu = c(1,2)
+dist = rmvnorm(n, mu, sigma)
+
+# estimate of the mean and variance from the aforementioned multivariate distribution
+(est_mu = colMeans(dist) %>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Estimated mean from the multivariate distribution'))
+```
+### Estimated Variance-Covariance Matrix
+
+```{r}
+#estimated variance
+(est_var = cov(dist)%>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Estimated Variance-Covariance Matrix'))
+
+```
+### R Programming Question not from Hansen's textbook
+
+### Define the initial parameters of the multivariate distribution and simulate
+```{r}
+# sed the seed to obtain the same results after randomizing
+set.seed(123)
+
+# From the distribution, we sample 50 observations
+num = 50
+
+# population variance
+sigma = diag(c(0.25^2, 1))
+
+# population mean
+mu = c(1,1)
+
+# Simulate from a Multivariate Normal Distribution to get the distribution
+dist = rmvnorm(n, mu, sigma)
+
+# estimate of the mean and variance from the aforementioned multivariate distribution
+est_mu = colMeans(dist)
+
+est_mu %>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Estimated mean from the multivariate distribution')
+
+```
+
+### Estimated Variance-Covariance Matrix
+
+```{r}
+#estimated variance
+est_var = cov(dist)
+est_var %>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Estimated Variance-Covariance Matrix')
+
+```
+
+
+```{r}
+set.seed(123)
+
+# sample 50 iid observations from y
+num = 50
+
+# number of simulations
+num_sim = 10000
+
+# Create a vector of 0s.
+# This will store the estimators obtained after for-looping
+est_theta = rep(0,num_sim)
+
+
+# start the for-loop to begin Monte Carlo simulations
+for (i in 1:num_sim) {
+  
+  # get the multivariate distribution with the specified parameters
+  dist_sim = rmvnorm(num,mu,sigma)
+  
+  # sample mean from each simulation
+  est_mean_sim = colMeans(dist_sim)
+  
+  # store the estimated theta obtained in each simulation
+  est_theta[i] = est_mean_sim[1] / est_mean_sim[2]
+}
+# standard error: we'll plug it in the formula for confidence intervals
+(theta_se = sd(est_theta))
+
+# 95% confidence interval of theta
+(lower_interval = mean(est_theta) - 1.96*theta_se)
+(upper_interval = mean(est_theta) + 1.96*theta_se)
+```
+
+From the simulations, the S.E = 0.160464, 95 % C.I. = (0.7063284, 1.335347)
+
+
+### 2: Use the delta method to compute an asymptotic standard error for θ and an asymptotic 95% confidence interval.
+
+
+```{r}
+
+# Analytically find the variance and s.e. by Delta method: first write the formula
+est_var_mu = (1/num)*est_var
+est_R = c(1/est_mu[2], -est_mu[1]/(est_mu[2])^2)
+
+asy_var_theta = est_R %*% est_var_mu %*% est_R
+
+## S.E. From the Delta method
+asy_se_theta = as.numeric(sqrt(asy_var_theta))
+
+asy_se_theta %>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Estimated Standard Error from the Delta Method')
+```
+
+
+
+
+### Computational Delta Method
+```{r}
+
+names(est_mu) = c("est_mu1", "est_mu2")
+rownames(est_var) = colnames(est_var) = names(est_mu)
+
+# defined the new variable theta
+transformed_variable = "est_mu1/est_mu2"
+
+# apply the delta method
+(deta_method = deltaMethod(est_mu, transformed_variable, (1/num)*est_var))
+
+```
+
+
+
+
+### 3. Use the jackknife to compute a standard error estimate for θ and a 95% confidence interval for θ.
+
+```{r jackknife}
+
+
+subset = as.data.frame(dist)
+est_thetaj = rep(0,num)
+
+for (i in 1:num) {
+  small_sample = subset[-i,]
+  est_muj = colMeans(small_sample)
+  est_thetaj[i] = est_muj[1] / est_muj[2]
+}
+#calculate the standard error of theta:
+avg_est_thetaj = mean(est_thetaj)
+theta_sej = sqrt(((num-1)/num)*sum((est_thetaj - avg_est_thetaj)^2))
+
+theta_sej %>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Jackknife SE')
+
+```
+
+
+
+
+### 3. C.I of theta using jackknife S.E
+
+```{r}
+(lowerj = avg_est_thetaj - 1.96*theta_sej)
+(higherj = avg_est_thetaj + 1.96*theta_sej)
+```
+
+
+The 95 percent C.I of theta using jackknife S.E is (0.7027328, 1.218193)
+
+### 4. Use the non-parametric bootstrap with num_boots = 10, 000 to compute a standard estimate for θ, and compute normal, percentile and BCA percentile 95% confidence intervals. Do the bootstrap with 5 different random number seeds (123, 124, 125, 126, 127) and compare the results.
+
+
+
+```{r}
+
+# number of simulations
+num_boots = 10000
+
+# initialize a vector of 0s;
+est_theta_boot = rep(0, num_boots)
+
+
+for (i in 1:num_boots) {
+  index = sample(n_obs, size=n_obs, replace=TRUE)
+  
+  # bootstrap sample
+  sample_data = subset[index,]
+  
+  # estimates of the bootrapped values from from sampling with replacement
+  est_mu_boot = colMeans(sample_data)
+  est_theta_boot[i] = est_mu_boot[1] / est_mu_boot[2]
+}
+
+
+# S.E. of the bootrapped estimate
+theta_se_boot = sd(est_theta_boot)
+
+theta_se_boot %>% kable(.,format = 'html', digits = 3, align = 'lrr', caption = 'Non-parametric bootstrap SE')
+```
+
+
+
+```{r}
+
+
+boot_theta_function = function(x, index) {
+  sample_data = x[index,]
+  est_mu_boot = colMeans(sample_data)
+  est_theta_boot = est_mu_boot[1] / est_mu_boot[2]
+  return(est_theta_boot)
+}
+
+
+```
+
+```{r}
+
+bootstrap_theta = boot(subset,statistic=boot_theta_function,R=10000)
+boot.ci(bootstrap_theta, conf=0.95, type=c("norm", "perc", "bca"))
+
+```
+
+# Acknowledgements: I took help from other students in answering the coding questions.
+
+
+
+
+
+
