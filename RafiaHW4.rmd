@@ -1,0 +1,224 @@
+---
+title: "HW4_RafiaNisat"
+author: "Rafia Nisat"
+date: "4/26/2022"
+output: pdf_document
+---
+```{r}
+setwd("C:/PhD Spring quarter/582/HW3")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/PhD Spring quarter/582/HW3')
+```
+```{r}
+suppressPackageStartupMessages(library(AER))
+suppressPackageStartupMessages(library(car))
+suppressPackageStartupMessages(library(ivreg))
+suppressPackageStartupMessages(library(lmtest))
+suppressPackageStartupMessages(library(haven))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(AER))
+suppressPackageStartupMessages(library(carData))
+suppressPackageStartupMessages(library(zoo))
+suppressPackageStartupMessages(library(sandwich))
+suppressPackageStartupMessages(library(survival))
+options(digits=3)
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggplot.multistats))
+suppressPackageStartupMessages(library(mvtnorm))
+install.packages("ivmodel")
+install.packages("Hmisc")
+suppressPackageStartupMessages(library(ivmodel))
+suppressPackageStartupMessages(library(Hmisc))
+```
+\\Irrelevant instruments\\
+```{r}
+generate_data <- function(n.obs, Gamma) {
+cbeta <- 1
+sigmae <- 1
+sigmav <- 1
+rho <- 0.99
+l <- length(Gamma)
+mu_z <- rep(0, l)
+Q_zz <- diag(l)
+mu_e <- c(0, 0)
+sigmaev <- rho*sigmae*sigmav
+sigma_error <- matrix(c(sigmae^2, sigmaev, sigmaev, sigmav^2),
+nrow = 2, ncol = 2)
+errors <- rmvnorm(n.obs, mu_e, sigma_error)
+e <- errors[, 1]
+v <- errors[, 2]
+Z <- rmvnorm(n.obs, mu_z, Q_zz)
+D <- Z%*%Gamma + v
+Y <- cbeta * D + e
+return(list(Y = Y, D = D, Z = Z))
+}
+cbeta <- 1
+cbeta.H0 <- 1
+n.obs <- 100
+n.sim <- 10000
+seed <- 123
+critical_value <- 1.96
+Gamma.irrelevant <- c(0, 0, 0, 0)
+Gamma.weak <- c(0.1, 0, 0, 0)
+Gamma.strong <- c(1, 0, 0, 0)
+Vhat.irrelevant <- 1/as.numeric(t(Gamma.irrelevant)%*%Gamma.irrelevant)
+Vhat.weak <- 1/as.numeric(t(Gamma.weak)%*%Gamma.weak)
+Vhat.strong <- 1/as.numeric(t(Gamma.strong)%*%Gamma.strong)
+sim.irrelevant <- as.data.frame(matrix(0, nrow = n.sim, ncol = 3))
+colnames(sim.irrelevant) <- c("beta_hat", "SE", "t_value")
+set.seed(seed)
+for (itr in 1:n.sim) {
+data.irrelevant <- generate_data(n.obs, Gamma.irrelevant)
+iv_out.irrelevant <- summary(ivreg(Y ~ D|Z, data = data.irrelevant))
+sim.irrelevant[itr, 1:2] <- iv_out.irrelevant$coefficients['D', 1:2]
+}
+sim.irrelevant[, 3] <- (sim.irrelevant$beta_hat - cbeta.H0)/sim.irrelevant$SE
+sim.CI.irrelevant <- cbind(sim.irrelevant$beta_hat - critical_value*sim.irrelevant$SE,
+sim.irrelevant$beta_hat + critical_value*sim.irrelevant$SE)
+size.irr <- mean(abs(sim.irrelevant$t_value) >= critical_value)
+size.irr
+```
+
+```{r}
+set.seed(seed)
+irr <- ivmodelFormula(Y ~ D|Z, data = data.irrelevant)
+tt <- AR.test(irr)
+tt
+```
+```{r}
+set.seed(seed)
+f_irr <-qf(0.95,df1=4,df2=96)
+f_irr
+```
+The test statistic from our AR test for irrelevant instrument in 0.276. But out F stat is 2.47. So we cannot reject the null hypothesis. 
+
+\\weak instruments\\
+```{r}
+sim.weak <- as.data.frame(matrix(0, nrow = n.sim, ncol = 3))
+colnames(sim.weak) <- c("beta_hat", "SE", "t_value")
+set.seed(seed)
+for (itr in 1:n.sim) {
+data.weak <- generate_data(n.obs, Gamma.weak)
+iv_out.weak<- summary(ivreg(Y ~ D|Z, data = data.weak))
+sim.weak[itr, 1:2] <- iv_out.weak$coefficients['D', 1:2]
+}
+sim.weak[, 3] <- (sim.weak$beta_hat - cbeta.H0)/sim.weak$SE
+sim.CI.weak <- cbind(sim.weak$beta_hat - critical_value*sim.weak$SE,
+sim.weak$beta_hat + critical_value*sim.weak$SE)
+size.weak <- mean(abs(sim.weak$t_value) >= critical_value)
+```
+##AR test for weak instrument##
+```{r}
+set.seed(seed)
+weak <- ivmodelFormula(Y ~ D|Z, data = data.weak)
+ww <- AR.test(weak)
+ww
+```
+```{r}
+ff <- qf(0.95, df1=4, df2=96)
+ff
+```
+Again, we see that the test statistic for the AR test for weak instrument is less than the F value. So we cannot reject the numm hypothesis. 
+
+###Strong Instrument###
+```{r}
+sim.strong <- as.data.frame(matrix(0, nrow = n.sim, ncol = 3))
+colnames(sim.strong) <- c("beta_hat", "SE", "t_value")
+set.seed(seed)
+for (itr in 1:n.sim) {
+data.strong <- generate_data(n.obs, Gamma.strong)
+iv_out.strong<- summary(ivreg(Y ~ D|Z, data = data.strong))
+sim.strong[itr, 1:2] <- iv_out.strong$coefficients['D', 1:2]
+}
+sim.strong[, 3] <- (sim.strong$beta_hat - cbeta.H0)/sim.strong$SE
+sim.CI.strong <- cbind(sim.strong$beta_hat - critical_value*sim.strong$SE,
+sim.weak$beta_hat + critical_value*sim.weak$SE)
+size.strong <- mean(abs(sim.strong$t_value) >= critical_value)
+```
+##AR test for strong IV##\
+```{r}
+set.seed(seed)
+strong <- ivmodelFormula(Y ~ D|Z, data = data.strong)
+ss <- AR.test(strong)
+strong
+```
+In this case, our test statistic for the strong instrumental variable is greater than 2.47 which is our F statistic calculated earlier. So we can reject the null hypothesis. 
+
+##Question 1##
+Histogram of 10,000 estimates of $\\hat{\\beta}_{2SLS}$ for the 3 instrument cases with comparison to usual asymptotic normal distribution for $\\hat{\\beta}_{2SLS}$
+
+##For irrelevant instrument##
+```{r}
+ggplot(sim.irrelevant) +
+geom_histogram(aes(x=beta_hat, y=..density..), bins = 30, alpha = 0.3) +
+stat_function(fun = dnorm, args = (list(mean = b, sd = sqrt(Vhat.irrelevant/n.obs)))) +
+ggtitle(tex("Histogram of $\\hat{\\beta}_{2SLS}$ when instruments are irrelevant", lref="c",psref="c",scale=1,srt=0))
+```
+###Weak Instruments##
+```{r}
+ggplot(sim.weak) +
+geom_histogram(aes(x=beta_hat, y=..density..), bins = 30, alpha = 0.3) +
+stat_function(fun = dnorm, args = (list(mean = b, sd = sqrt(Vhat.weak/n.obs)))) +
+ggtitle(tex("Histogram of $\\hat{\\beta}_{2SLS}$ when instruments are weak", lref="c",psref="c",scale=1,srt=0))
+```
+##Strong instruments##
+```{r}
+ggplot(sim.strong) +
+geom_histogram(aes(x=beta_hat, y=..density..), bins = 30, alpha = 0.3) +
+stat_function(fun = dnorm, args = (list(mean = b, sd = sqrt(Vhat.strong/n.obs)))) +
+ggtitle(tex("Histogram of $\\hat{\\beta}_{2SLS}$ when instruments are strong", lref="c",psref="c",scale=1,srt=0))
+```
+##Question 2: To compute the bias of $\\hat{\\beta}_{2SLS}$ for 3 instrument cases//
+
+```{r}
+b.irrelevant <- mean(sim.irrelevant$beta_hat) - cbeta
+b.weak <- mean(sim.weak$beta_hat) - cbeta
+b.strong <- mean(sim.strong$beta_hat) - cbeta
+bias <- c(b.irrelevant, b.weak, b.strong)
+names(bias) <- c("irrelevant", "weak", "strong")
+knitr::kable(as.data.frame(bias),
+caption = "Bias of 2SLS estimates",
+digits = 3)
+```
+###Question 3: Histogram of 10,000 t-stats for the 3 instrument cases with comparison to N(0, 1) distribution####
+
+```{r}
+set.seed(seed)
+tvalue_sim <- data.frame(cbind(sim.irrelevant$t_value, sim.weak$t_value, sim.strong$t_value))
+names(tvalue_sim) <- c("irrelevant", "weak", "strong")
+ggplot(gather(tvalue_sim), aes(value, fill=key)) +
+geom_histogram(aes(y=..density..), alpha = 0.7, bins=500, position = 'identity') +
+xlim(c(-max(abs(tvalue_sim)), max(abs(tvalue_sim)))) +
+stat_function(fun = dnorm) +
+ggtitle("Histogram of t-values compared with N(0, 1) density")
+```
+###Question 4: Empirical size of the 5% t test for the 3 instrument cases##
+```{r}
+size <- c(size.irr, size.weak, size.strong)
+names(size) <- c("irrelevant", "weak", "strong")
+knitr::kable(as.data.frame(size),
+caption = "empirical size of 5% t-test",
+digits = 3)
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
