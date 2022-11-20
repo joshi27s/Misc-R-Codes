@@ -1,0 +1,1584 @@
+------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/PS5Codes.log
+  log type:  text
+ opened on:  20 Nov 2022, 08:46:36
+
+. 
+. 
+. 
+. ******************** Q1 *************************
+. 
+. /* (a) A treatment was assigned for all students with test score at least 0. Generate an indicator
+> variable for this treatment. Estimate a regression of secondary on test score, treatment,
+> and an interaction term between those two variables. Report the results.   */
+. 
+. gen treat = test >=0
+
+. 
+. 
+. // add c before a continuous variable to interact a continuous with a binary variable
+. reg secondary test treat c.test##treat 
+note: test omitted because of collinearity
+note: 1.treat omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =     1,943
+-------------+----------------------------------   F(3, 1939)      =    101.32
+       Model |    64.16014         3  21.3867133   Prob > F        =    0.0000
+    Residual |  409.304605     1,939  .211090565   R-squared       =    0.1355
+-------------+----------------------------------   Adj R-squared   =    0.1342
+       Total |  473.464745     1,942  .243802649   Root MSE        =    .45945
+
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        test |   .2669451   .0690155     3.87   0.000     .1315927    .4022974
+       treat |   .1635833   .0377071     4.34   0.000     .0896326    .2375339
+        test |          0  (omitted)
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |   .0187127   .0966742     0.19   0.847    -.1708835     .208309
+             |
+       _cons |   .3302689   .0264831    12.47   0.000     .2783306    .3822073
+------------------------------------------------------------------------------
+
+. 
+. 
+. 
+. /* (c) Re-do part (a) but restricting to the absolute value of the test score being less than each
+> of 0.8, 0.4, 0.2, and 0.1. Report the estimated treatment effects and standard errors for
+> each “bandwidth” and discuss how they change as the window gets smaller. */
+. 
+. gen abs_val = abs(test)
+
+. 
+. reg secondary test treat c.test##treat if abs_val < 0.8
+note: test omitted because of collinearity
+note: 1.treat omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =     1,943
+-------------+----------------------------------   F(3, 1939)      =    101.32
+       Model |    64.16014         3  21.3867133   Prob > F        =    0.0000
+    Residual |  409.304605     1,939  .211090565   R-squared       =    0.1355
+-------------+----------------------------------   Adj R-squared   =    0.1342
+       Total |  473.464745     1,942  .243802649   Root MSE        =    .45945
+
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        test |   .2669451   .0690155     3.87   0.000     .1315927    .4022974
+       treat |   .1635833   .0377071     4.34   0.000     .0896326    .2375339
+        test |          0  (omitted)
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |   .0187127   .0966742     0.19   0.847    -.1708835     .208309
+             |
+       _cons |   .3302689   .0264831    12.47   0.000     .2783306    .3822073
+------------------------------------------------------------------------------
+
+. est store ols8, title("OLS 0.8")
+
+. 
+. reg secondary test treat c.test##treat if abs_val < 0.4
+note: test omitted because of collinearity
+note: 1.treat omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =     1,244
+-------------+----------------------------------   F(3, 1240)      =     33.76
+       Model |  22.8781669         3  7.62605563   Prob > F        =    0.0000
+    Residual |  280.083248     1,240  .225873587   R-squared       =    0.0755
+-------------+----------------------------------   Adj R-squared   =    0.0733
+       Total |  302.961415     1,243  .243734042   Root MSE        =    .47526
+
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        test |   .1155869   .1691109     0.68   0.494    -.2161882    .4473621
+       treat |   .1835518   .0520882     3.52   0.000      .081361    .2857425
+        test |          0  (omitted)
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |   .1991023    .237239     0.84   0.401    -.2663319    .6645366
+             |
+       _cons |   .3059239   .0361049     8.47   0.000     .2350904    .3767573
+------------------------------------------------------------------------------
+
+. est store ols4, title("OLS 0.4")
+
+. 
+. reg secondary test treat c.test##treat if abs_val < 0.2
+note: test omitted because of collinearity
+note: 1.treat omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =       687
+-------------+----------------------------------   F(3, 683)       =     13.34
+       Model |   9.1682331         3   3.0560777   Prob > F        =    0.0000
+    Residual |   156.52609       683  .229174363   R-squared       =    0.0553
+-------------+----------------------------------   Adj R-squared   =    0.0512
+       Total |  165.694323       686  .241536914   Root MSE        =    .47872
+
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        test |  -.1392701   .4685435    -0.30   0.766    -1.059229    .7806884
+       treat |   .2315696   .0750924     3.08   0.002     .0841299    .3790093
+        test |          0  (omitted)
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |   .2640551   .6623381     0.40   0.690    -1.036408    1.564518
+             |
+       _cons |   .2814712   .0519439     5.42   0.000     .1794822    .3834601
+------------------------------------------------------------------------------
+
+. est store ols2, title("OLS 0.2")
+
+. 
+. reg secondary test treat c.test##treat if abs_val < 0.1
+note: test omitted because of collinearity
+note: 1.treat omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =       338
+-------------+----------------------------------   F(3, 334)       =      5.92
+       Model |  4.07497199         3    1.358324   Prob > F        =    0.0006
+    Residual |  76.5907085       334  .229313498   R-squared       =    0.0505
+-------------+----------------------------------   Adj R-squared   =    0.0420
+       Total |  80.6656805       337  .239364037   Root MSE        =    .47887
+
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        test |  -.3437327   1.297368    -0.26   0.791    -2.895775     2.20831
+       treat |   .2128195   .1124365     1.89   0.059    -.0083534    .4339924
+        test |          0  (omitted)
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |   .8126233    1.97102     0.41   0.680    -3.064554    4.689801
+             |
+       _cons |   .2730309   .0750323     3.64   0.000     .1254353    .4206264
+------------------------------------------------------------------------------
+
+. est store ols1, title("OLS 0.1")
+
+. 
+. estout ols8 ols4 ols2 ols1, cells(b(star fmt(5)) se(par fmt(4)))   /// add standard errors and stars to indicate that 
+> the coefficients are statistically significant
+> legend label varlabels(_cons constant)               ///
+> stats(r2 df_r bic, fmt(3 0 1) label(R-sqr dfres BIC)) // add R-squared, residual degrees of freedom and BIC, and adjus
+> t the number of decimal places to display for each item
+
+------------------------------------------------------------------------------------
+                          OLS 0.8         OLS 0.4         OLS 0.2         OLS 0.1   
+                             b/se            b/se            b/se            b/se   
+------------------------------------------------------------------------------------
+KCPE centered at c~f      0.26695***      0.11559        -0.13927        -0.34373   
+                         (0.0690)        (0.1691)        (0.4685)        (1.2974)   
+treat                     0.16358***      0.18355***      0.23157**       0.21282   
+                         (0.0377)        (0.0521)        (0.0751)        (0.1124)   
+KCPE centered at c~f      0.00000         0.00000         0.00000         0.00000   
+                              (.)             (.)             (.)             (.)   
+treat=0                   0.00000         0.00000         0.00000         0.00000   
+                              (.)             (.)             (.)             (.)   
+treat=1                   0.00000         0.00000         0.00000         0.00000   
+                              (.)             (.)             (.)             (.)   
+treat=0 # KCPE cen~f      0.00000         0.00000         0.00000         0.00000   
+                              (.)             (.)             (.)             (.)   
+treat=1 # KCPE cen~f      0.01871         0.19910         0.26406         0.81262   
+                         (0.0967)        (0.2372)        (0.6623)        (1.9710)   
+constant                  0.33027***      0.30592***      0.28147***      0.27303***
+                         (0.0265)        (0.0361)        (0.0519)        (0.0750)   
+------------------------------------------------------------------------------------
+R-sqr                       0.136           0.076           0.055           0.051   
+dfres                        1939            1240             683             334   
+BIC                        2518.0          1704.0           959.6           480.7   
+------------------------------------------------------------------------------------
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. /* (d) Use command rd with only arguments secondary and test (in that order). Report the
+> estimated treatment effect and contrast to part (c).     */
+. 
+. rd secondary test
+Two variables specified; treatment is 
+assumed to jump from zero to one at Z=0. 
+
+ Assignment variable Z is test
+ Treatment variable X_T unspecified
+ Outcome variable y is secondary
+
+Estimating for bandwidth .6003722601443596
+Estimating for bandwidth .3001861300721798
+Estimating for bandwidth 1.200744520288719
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       lwald |   .1820994   .0475157     3.83   0.000     .0889703    .2752285
+     lwald50 |   .2278837   .0668106     3.41   0.001     .0969373      .35883
+    lwald200 |   .1709066   .0397053     4.30   0.000     .0930857    .2487275
+------------------------------------------------------------------------------
+
+. est store rd1, title("RD 1")
+
+. 
+. /* (e) Use command rdplot with arguments secondary and test (in that order). Interpret the
+> resulting graph.     */
+. 
+. rdplot secondary test
+Mass points detected in the running variable.
+
+RD Plot with evenly spaced mimicking variance number of bins using polynomial regression.
+
+         Cutoff c = 0 | Left of c  Right of c        Number of obs  =       1943
+----------------------+----------------------        Kernel         =    Uniform
+        Number of obs |       953         990
+   Eff. Number of obs |       953         990
+  Order poly. fit (p) |         4           4
+     BW poly. fit (h) |     0.797       0.797
+ Number of bins scale |     1.000       1.000
+
+Outcome: secondary. Running variable: test.
+---------------------------------------------
+                      | Left of c  Right of c
+----------------------+----------------------
+        Bins selected |        38          36
+   Average bin length |     0.021       0.022
+    Median bin length |     0.021       0.022
+----------------------+----------------------
+    IMSE-optimal bins |         5           7
+  Mimicking Var. bins |        38          36
+----------------------+----------------------
+Rel. to IMSE-optimal: | 
+        Implied scale |     7.600       5.143
+    WIMSE var. weight |     0.002       0.007
+    WIMSE bias weight |     0.998       0.993
+---------------------------------------------
+
+
+. graph save Graph "$path_graph/1e)rdplot.gph", replace
+(note: file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/1e)rdplot
+> .gph not found)
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/1e)rdplot.gph s
+> aved)
+
+. 
+. hist test, bin(100) addplot(pci 0 0 0.8 0)
+(bin=100, start=-.79714, width=.0159428)
+
+. graph save Graph "$path_graph/1e)hist.gph", replace
+(note: file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/1e)hist.g
+> ph not found)
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/1e)hist.gph sav
+> ed)
+
+. 
+. rddensity test
+Computing data-driven bandwidth selectors.
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =         1943
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |       953         990          BW method     =         comb
+Eff. Number of obs |       422         441          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.250       0.279
+
+Running variable: test.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    0.3455      0.7297
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.010 |       20          15 |    0.4996
+             0.020 |       37          31 |    0.5446
+             0.030 |       59          44 |    0.1674
+             0.040 |       78          68 |    0.4565
+             0.050 |       82          71 |    0.4189
+             0.060 |      111         105 |    0.7338
+             0.070 |      118         108 |    0.5495
+             0.080 |      149         145 |    0.8611
+             0.090 |      150         147 |    0.9076
+             0.100 |      179         159 |    0.3014
+-----------------------------------------------------
+
+. rdbwselect secondary test, bwselect(mserd) 
+Mass points detected in the running variable.
+
+Bandwidth estimators for sharp RD local polynomial regression.
+
+       Cutoff c =  | Left of c  Right of c            Number of obs =       1943
+-------------------+----------------------            Kernel        = Triangular
+     Number of obs |       953         990            VCE method    =         NN
+       Min of test |    -0.797       0.000
+       Max of test |    -0.003       0.797
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+        Unique obs |       208         199
+
+Outcome: secondary. Running variable: test.
+--------------------------------------------------------------------------------
+                   |         BW est. (h)          |        BW bias (b)
+            Method | Left of c         Right of c | Left of c        Right of c
+-------------------+------------------------------+-----------------------------
+             mserd |     0.271              0.271 |     0.439             0.439
+--------------------------------------------------------------------------------
+Estimates adjusted for mass points in the running variable.
+
+. local halfwidth = s(h_mserd)/2
+
+. 
+. /* rdplot secondary test, graph_options(xline(-`halfwidth') xline(`halfwidth'))
+> graph save Graph "$path_graph/1e)rdplot_mserd.gph", replace */
+. 
+. /*(f) Use the command rd with arguments secondary and test (in that order). To override
+> the default kernel and bandwidth, use options “k(rect)” and “bw(0.8).” Compare your
+> estimated treatment effect to the one in part (c) that restricts estimation to those with
+> test score between -0.8 and 0.8. Are they the same? */
+. 
+. rd secondary test, k(rect) bw(0.8)
+Two variables specified; treatment is 
+assumed to jump from zero to one at Z=0. 
+
+ Assignment variable Z is test
+ Treatment variable X_T unspecified
+ Outcome variable y is secondary
+
+Estimating for bandwidth .8
+Estimating for bandwidth .4
+Estimating for bandwidth 1.6
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       lwald |   .1635833   .0384829     4.25   0.000     .0881581    .2390084
+     lwald50 |   .1835518   .0522473     3.51   0.000      .081149    .2859546
+    lwald200 |   .1635833   .0384829     4.25   0.000     .0881581    .2390084
+------------------------------------------------------------------------------
+
+. est store rd2, title("RD 2")
+
+. 
+. /* (g) Next, estimate by 2SLS the effect of secondary schooling on the combined reading and
+> vocabulary score. That is, your first stage should predict secondary as a function of
+> treatment, while the second stage estimates the effect of secondary on rv. Include test,
+> female, and an interaction between test and treatment on the RHS of both stages.
+> Compare your results to those presented in the published paper’s Table 3, Column 3.
+> (Note that they should not be numerically identical since we are not using covariates.)   */
+. 
+. global xlist test female c.test##treat
+
+. 
+. 
+. reg secondary treat $xlist //1st stage
+note: test omitted because of collinearity
+note: 1.treat omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =     1,943
+-------------+----------------------------------   F(4, 1938)      =     85.49
+       Model |  71.0121058         4  17.7530264   Prob > F        =    0.0000
+    Residual |  402.452639     1,938  .207663901   R-squared       =    0.1500
+-------------+----------------------------------   Adj R-squared   =    0.1482
+       Total |  473.464745     1,942  .243802649   Root MSE        =     .4557
+
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       treat |   .1612666   .0374019     4.31   0.000     .0879143    .2346188
+        test |   .2714736   .0684575     3.97   0.000     .1372154    .4057317
+      female |  -.1197268   .0208432    -5.74   0.000    -.1606043   -.0788494
+        test |          0  (omitted)
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |  -.0060507   .0959832    -0.06   0.950    -.1942918    .1821905
+             |
+       _cons |    .389748   .0282345    13.80   0.000     .3343748    .4451213
+------------------------------------------------------------------------------
+
+. est store first, title("1st stage")
+
+. 
+. reg rv secondary $xlist // 2nd stage
+note: test omitted because of collinearity
+
+      Source |       SS           df       MS      Number of obs   =     1,923
+-------------+----------------------------------   F(5, 1917)      =    189.73
+       Model |  371.261691         5  74.2523383   Prob > F        =    0.0000
+    Residual |  750.219157     1,917   .39135063   R-squared       =    0.3310
+-------------+----------------------------------   Adj R-squared   =    0.3293
+       Total |  1121.48085     1,922  .583496799   Root MSE        =    .62558
+
+------------------------------------------------------------------------------
+          rv |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+   secondary |   .6114091   .0313748    19.49   0.000     .5498768    .6729413
+        test |   .6530897   .0948771     6.88   0.000     .4670165    .8391629
+      female |  -.1899978   .0290229    -6.55   0.000    -.2469176    -.133078
+        test |          0  (omitted)
+     1.treat |   .0095818   .0518499     0.18   0.853    -.0921062    .1112699
+             |
+treat#c.test |
+          1  |  -.3112223   .1324805    -2.35   0.019    -.5710433   -.0514012
+             |
+       _cons |    2.97557   .0407711    72.98   0.000      2.89561     3.05553
+------------------------------------------------------------------------------
+
+. est store sec, title("2nd stage")
+
+. 
+. ivreg2 rv (secondary = treat $xlist), first
+Warning - duplicate variables detected
+Duplicates:         test
+Warning - collinearities detected
+Vars dropped:       1.treat
+
+First-stage regressions
+-----------------------
+
+
+First-stage regression of secondary:
+
+Statistics consistent for homoskedasticity only
+Number of obs =                   1923
+------------------------------------------------------------------------------
+   secondary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       treat |   .1641533   .0375483     4.37   0.000     .0905136     .237793
+        test |   .2717651   .0687695     3.95   0.000     .1368943    .4066359
+      female |  -.1231299   .0209341    -5.88   0.000    -.1641859   -.0820739
+     1.treat |          0  (omitted)
+             |
+treat#c.test |
+          1  |   -.006414   .0964155    -0.07   0.947    -.1955043    .1826762
+             |
+       _cons |   .3907803   .0282986    13.81   0.000     .3352811    .4462796
+------------------------------------------------------------------------------
+F test of excluded instruments:
+  F(  4,  1918) =    86.31
+  Prob > F      =   0.0000
+Sanderson-Windmeijer multivariate F test of excluded instruments:
+  F(  4,  1918) =    86.31
+  Prob > F      =   0.0000
+
+
+
+Summary results for first-stage regressions
+-------------------------------------------
+
+                                           (Underid)            (Weak id)
+Variable     | F(  4,  1918)  P-val | SW Chi-sq(  4) P-val | SW F(  4,  1918)
+secondary    |      86.31    0.0000 |      346.16   0.0000 |       86.31
+
+Stock-Yogo weak ID F test critical values for single endogenous regressor:
+                                    5% maximal IV relative bias    16.85
+                                   10% maximal IV relative bias    10.27
+                                   20% maximal IV relative bias     6.71
+                                   30% maximal IV relative bias     5.34
+                                   10% maximal IV size             24.58
+                                   15% maximal IV size             13.96
+                                   20% maximal IV size             10.26
+                                   25% maximal IV size              8.31
+Source: Stock-Yogo (2005).  Reproduced by permission.
+NB: Critical values are for Sanderson-Windmeijer F statistic.
+
+Underidentification test
+Ho: matrix of reduced form coefficients has rank=K1-1 (underidentified)
+Ha: matrix has rank=K1 (identified)
+Anderson canon. corr. LM statistic       Chi-sq(4)=293.35   P-val=0.0000
+
+Weak identification test
+Ho: equation is weakly identified
+Cragg-Donald Wald F statistic                                      86.31
+
+Stock-Yogo weak ID test critical values for K1=1 and L1=4:
+                                    5% maximal IV relative bias    16.85
+                                   10% maximal IV relative bias    10.27
+                                   20% maximal IV relative bias     6.71
+                                   30% maximal IV relative bias     5.34
+                                   10% maximal IV size             24.58
+                                   15% maximal IV size             13.96
+                                   20% maximal IV size             10.26
+                                   25% maximal IV size              8.31
+Source: Stock-Yogo (2005).  Reproduced by permission.
+
+Weak-instrument-robust inference
+Tests of joint significance of endogenous regressors B1 in main equation
+Ho: B1=0 and orthogonality conditions are valid
+Anderson-Rubin Wald test           F(4,1918)=    118.77     P-val=0.0000
+Anderson-Rubin Wald test           Chi-sq(4)=    476.33     P-val=0.0000
+Stock-Wright LM S statistic        Chi-sq(4)=    381.77     P-val=0.0000
+
+Number of observations               N  =       1923
+Number of regressors                 K  =          2
+Number of endogenous regressors      K1 =          1
+Number of instruments                L  =          5
+Number of excluded instruments       L1 =          4
+
+IV (2SLS) estimation
+--------------------
+
+Estimates efficient for homoskedasticity only
+Statistics consistent for homoskedasticity only
+
+                                                      Number of obs =     1923
+                                                      F(  1,  1921) =   328.22
+                                                      Prob > F      =   0.0000
+Total (centered) SS     =  1121.480848                Centered R2   =  -0.1218
+Total (uncentered) SS   =  19723.26101                Uncentered R2 =   0.9362
+Residual SS             =  1258.132786                Root MSE      =    .8089
+
+------------------------------------------------------------------------------
+          rv |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+   secondary |   1.733123   .0956144    18.13   0.000     1.545723    1.920524
+       _cons |   2.378372   .0443878    53.58   0.000     2.291373     2.46537
+------------------------------------------------------------------------------
+Underidentification test (Anderson canon. corr. LM statistic):         293.352
+                                                   Chi-sq(4) P-val =    0.0000
+------------------------------------------------------------------------------
+Weak identification test (Cragg-Donald Wald F statistic):               86.315
+Stock-Yogo weak ID test critical values:  5% maximal IV relative bias    16.85
+                                         10% maximal IV relative bias    10.27
+                                         20% maximal IV relative bias     6.71
+                                         30% maximal IV relative bias     5.34
+                                         10% maximal IV size             24.58
+                                         15% maximal IV size             13.96
+                                         20% maximal IV size             10.26
+                                         25% maximal IV size              8.31
+Source: Stock-Yogo (2005).  Reproduced by permission.
+------------------------------------------------------------------------------
+Sargan statistic (overidentification test of all instruments):          11.744
+                                                   Chi-sq(3) P-val =    0.0083
+------------------------------------------------------------------------------
+Instrumented:         secondary
+Excluded instruments: treat test female 1.treat#c.test
+Duplicates:           test
+Dropped collinear:    1.treat
+------------------------------------------------------------------------------
+
+. est store ivreg2, title("2SLS")
+
+. 
+. estout first sec ivreg2, cells(b(star fmt(5)) se(par fmt(4)))   /// add standard errors and stars to indicate that the
+>  coefficients are statistically significant
+> legend label varlabels(_cons constant)               ///
+> stats(r2 df_r bic, fmt(3 0 1) label(R-sqr dfres BIC)) // add R-squared, residual degrees of freedom and BIC, and adjus
+> t the number of decimal places to display for each item
+
+--------------------------------------------------------------------
+                        1st stage       2nd stage            2SLS   
+                             b/se            b/se            b/se   
+--------------------------------------------------------------------
+treat                     0.16127***                                
+                         (0.0374)                                   
+KCPE centered at c~f      0.27147***      0.65309***                
+                         (0.0685)        (0.0949)                   
+Female                   -0.11973***     -0.19000***                
+                         (0.0208)        (0.0290)                   
+KCPE centered at c~f      0.00000                                   
+                              (.)                                   
+treat=0                   0.00000         0.00000                   
+                              (.)             (.)                   
+treat=1                   0.00000         0.00958                   
+                              (.)        (0.0518)                   
+treat=0 # KCPE cen~f      0.00000         0.00000                   
+                              (.)             (.)                   
+treat=1 # KCPE cen~f     -0.00605        -0.31122*                  
+                         (0.0960)        (0.1325)                   
+KCPE centered at c~f                      0.00000                   
+                                              (.)                   
+Completing Std 12                         0.61141***      1.73312***
+                                         (0.0314)        (0.0956)   
+constant                  0.38975***      2.97557***      2.37837***
+                         (0.0282)        (0.0408)        (0.0444)   
+--------------------------------------------------------------------
+R-sqr                       0.150           0.331          -0.122   
+dfres                        1938            1917                   
+BIC                        2492.8          3692.5          4656.5   
+--------------------------------------------------------------------
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. /* (h) Use the command rd, with default options, with arguments rv, secondary, and test (in
+> that order). Compare to your results from (g). */
+. 
+. rd rv secondary test
+Three variables specified; jump in treatment  
+at Z=0 will be estimated. Local Wald Estimate
+is the ratio of jump in outcome to jump in treatment.
+
+ Assignment variable Z is test
+ Treatment variable X_T is secondary
+ Outcome variable y is rv
+
+(20 missing values generated)
+(20 missing values generated)
+(20 missing values generated)
+Estimating for bandwidth .2386887541646187
+Estimating for bandwidth .1193443770823094
+Estimating for bandwidth .4773775083292374
+------------------------------------------------------------------------------
+          rv |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       numer |   .3407973    .106035     3.21   0.001     .1329726    .5486221
+       denom |   .2322333   .0744899     3.12   0.002     .0862357    .3782308
+       lwald |   1.467479   .5105462     2.87   0.004     .4668263    2.468131
+     numer50 |   .3246425   .1609662     2.02   0.044     .0091545    .6401305
+     denom50 |   .2482591   .1081001     2.30   0.022     .0363868    .4601314
+     lwald50 |   1.307676   .6568823     1.99   0.047     .0202102    2.595141
+    numer200 |   .2390952   .0746758     3.20   0.001     .0927332    .3854572
+    denom200 |    .206212   .0527181     3.91   0.000     .1028864    .3095377
+    lwald200 |   1.159463   .3747505     3.09   0.002     .4249656    1.893961
+------------------------------------------------------------------------------
+
+. est store rd3, title("RD3")
+
+. 
+. estout rd1 rd2 rd3, cells(b(star fmt(5)) se(par fmt(4)))   /// add standard errors and stars to indicate that the coef
+> ficients are statistically significant
+> legend label varlabels(_cons constant)               ///
+> stats(r2 df_r bic, fmt(3 0 1) label(R-sqr dfres BIC)) // add R-squared, residual degrees of freedom and BIC, and adjus
+> t the number of decimal places to display for each item
+
+--------------------------------------------------------------------
+                             RD 1            RD 2             RD3   
+                             b/se            b/se            b/se   
+--------------------------------------------------------------------
+lwald                     0.18210***      0.16358***      1.46748** 
+                         (0.0475)        (0.0385)        (0.5105)   
+lwald50                   0.22788***      0.18355***      1.30768*  
+                         (0.0668)        (0.0522)        (0.6569)   
+lwald200                  0.17091***      0.16358***      1.15946** 
+                         (0.0397)        (0.0385)        (0.3748)   
+numer                                                     0.34080** 
+                                                         (0.1060)   
+denom                                                     0.23223** 
+                                                         (0.0745)   
+numer50                                                   0.32464*  
+                                                         (0.1610)   
+denom50                                                   0.24826*  
+                                                         (0.1081)   
+numer200                                                  0.23910** 
+                                                         (0.0747)   
+denom200                                                  0.20621***
+                                                         (0.0527)   
+--------------------------------------------------------------------
+R-sqr                                                               
+dfres                                                               
+BIC                             .               .               .   
+--------------------------------------------------------------------
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. /* (i) Use the rd command to generate the same results that you found in part (g). What
+> options do you need to use? (Hint: you’ll need to override the defaults as in part (f).)    */
+. 
+. ******************** Q2 *************************
+. 
+. 
+. 
+. use "$path/RD_Manip_Econ587.dta", clear
+
+. 
+. 
+. /* (a) First, look at the densities of reported wealth under all four scenarios. To do this,
+> estimate kernel densities (using the kdensity command) of the four measures of reported
+> wealth, using bandwidths of 0.1, 0.05, and 0.01. Describe what you see and relate to the
+> DGP for each of the four measures. (Hint: for a given bandwidth, you should graph the
+> four kernel densities simultaneously using the twoway language in Stata.)     */
+. 
+. twoway kdensity reportwealth1 ||kdensity reportwealth2 ||kdensity reportwealth3 ||kdensity reportwealth4, bwidth(0.1)
+
+. graph save Graph "$path_graph/2a)kdensity0.1.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2a)kdensity0.1.
+> gph saved)
+
+. 
+. twoway kdensity reportwealth1 ||kdensity reportwealth2 ||kdensity reportwealth3 ||kdensity reportwealth4, bwidth(0.05)
+
+. graph save Graph "$path_graph/2a)kdensity0.05.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2a)kdensity0.05
+> .gph saved)
+
+. 
+. twoway kdensity reportwealth1 ||kdensity reportwealth2 ||kdensity reportwealth3 ||kdensity reportwealth4, bwidth(0.01)
+
+. graph save Graph "$path_graph/2a)kdensity0.01.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2a)kdensity0.01
+> .gph saved)
+
+. 
+. 
+. /* (b) Next, do a crude test of the “smoothness” of the density around the cutoff for each of the
+> four running variables. For each running variable, perform a series of tests of whether
+> the proportion of observations within v of 0 on either side of the cutoff is the same. Do
+> this for v = 0.1, 0.05, and 0.01. Report and discuss your results.   */
+. 
+. 
+. hist reportwealth1, bin(100) addplot(pci 0 0 0.8 0)
+(bin=100, start=-.99954617, width=.0199949)
+
+. graph save Graph "$path_graph/2b)hist_rw1.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2b)hist_rw1.gph
+>  saved)
+
+. 
+. hist reportwealth2, bin(100) addplot(pci 0 0 0.8 0)
+(bin=100, start=-1.257261, width=.02550863)
+
+. graph save Graph "$path_graph/2b)hist_rw2.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2b)hist_rw2.gph
+>  saved)
+
+. 
+. hist reportwealth3, bin(100) addplot(pci 0 0 0.8 0)
+(bin=100, start=-.99954617, width=.0199949)
+
+. graph save Graph "$path_graph/2b)hist_rw3.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2b)hist_rw3.gph
+>  saved)
+
+. 
+. hist reportwealth4, bin(100) addplot(pci 0 0 0.8 0)
+(bin=100, start=-.99954617, width=.0199949)
+
+. graph save Graph "$path_graph/2b)hist_rw4.gph", replace
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2b)hist_rw4.gph
+>  saved)
+
+. 
+. // more formal hypothesis test
+. 
+. rddensity reportwealth1, h(0.1)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      4977        5023          BW method     =       manual
+Eff. Number of obs |       491         506          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.100       0.100
+
+Running variable: reportwealth1.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    0.6609      0.5087
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |        9          11 |    0.8238
+             0.004 |       19          19 |    1.0000
+             0.006 |       29          33 |    0.7035
+             0.008 |       40          45 |    0.6646
+             0.010 |       50          54 |    0.7688
+             0.012 |       59          66 |    0.5917
+             0.014 |       71          72 |    1.0000
+             0.016 |       80          85 |    0.7556
+             0.018 |       90          93 |    0.8825
+             0.020 |      100         104 |    0.8337
+-----------------------------------------------------
+
+. rddensity reportwealth2, h(0.1)
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      4967        5033          BW method     =       manual
+Eff. Number of obs |       490         524          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.100       0.100
+
+Running variable: reportwealth2.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    0.4765      0.6337
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |        8          12 |    0.5034
+             0.005 |       24          30 |    0.4966
+             0.007 |       38          41 |    0.8221
+             0.010 |       49          54 |    0.6937
+             0.012 |       59          74 |    0.2246
+             0.014 |       68          84 |    0.2236
+             0.017 |       81          92 |    0.4472
+             0.019 |       93         107 |    0.3580
+             0.021 |      101         120 |    0.2259
+             0.024 |      119         136 |    0.3164
+-----------------------------------------------------
+
+. rddensity reportwealth3, h(0.1)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      6052        3948          BW method     =       manual
+Eff. Number of obs |       882         139          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.100       0.100
+
+Running variable: reportwealth3.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |   -6.8689      0.0000
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |       18           2 |    0.0004
+             0.004 |       33           5 |    0.0000
+             0.005 |       55           7 |    0.0000
+             0.007 |       67           9 |    0.0000
+             0.009 |       88          10 |    0.0000
+             0.011 |      103          13 |    0.0000
+             0.012 |      119          15 |    0.0000
+             0.014 |      137          16 |    0.0000
+             0.016 |      155          20 |    0.0000
+             0.018 |      170          21 |    0.0000
+-----------------------------------------------------
+
+. rddensity reportwealth4, h(0.1)
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      5651        4349          BW method     =       manual
+Eff. Number of obs |       546         463          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.100       0.100
+
+Running variable: reportwealth4.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    0.1593      0.8735
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |       11           9 |    0.8238
+             0.004 |       18          17 |    1.0000
+             0.006 |       31          24 |    0.4188
+             0.008 |       44          35 |    0.3682
+             0.010 |       49          45 |    0.7572
+             0.012 |       62          56 |    0.6455
+             0.014 |       69          67 |    0.9317
+             0.016 |       78          74 |    0.8078
+             0.018 |       95          82 |    0.3671
+             0.020 |      105          94 |    0.4785
+-----------------------------------------------------
+
+. 
+. rddensity reportwealth1, h(0.05)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      4977        5023          BW method     =       manual
+Eff. Number of obs |       239         244          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.050       0.050
+
+Running variable: reportwealth1.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |   -0.0263      0.9791
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |        9          11 |    0.8238
+             0.004 |       19          19 |    1.0000
+             0.006 |       29          33 |    0.7035
+             0.008 |       40          45 |    0.6646
+             0.010 |       50          54 |    0.7688
+             0.012 |       59          66 |    0.5917
+             0.014 |       71          72 |    1.0000
+             0.016 |       80          85 |    0.7556
+             0.018 |       90          93 |    0.8825
+             0.020 |      100         104 |    0.8337
+-----------------------------------------------------
+
+. rddensity reportwealth2, h(0.05)
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      4967        5033          BW method     =       manual
+Eff. Number of obs |       237         279          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.050       0.050
+
+Running variable: reportwealth2.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    1.0279      0.3040
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |        8          12 |    0.5034
+             0.005 |       24          30 |    0.4966
+             0.007 |       38          41 |    0.8221
+             0.010 |       49          54 |    0.6937
+             0.012 |       59          74 |    0.2246
+             0.014 |       68          84 |    0.2236
+             0.017 |       81          92 |    0.4472
+             0.019 |       93         107 |    0.3580
+             0.021 |      101         120 |    0.2259
+             0.024 |      119         136 |    0.3164
+-----------------------------------------------------
+
+. rddensity reportwealth3, h(0.05)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      6052        3948          BW method     =       manual
+Eff. Number of obs |       451          52          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.050       0.050
+
+Running variable: reportwealth3.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |   -5.3339      0.0000
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |       18           2 |    0.0004
+             0.004 |       33           5 |    0.0000
+             0.005 |       55           7 |    0.0000
+             0.007 |       67           9 |    0.0000
+             0.009 |       88          10 |    0.0000
+             0.011 |      103          13 |    0.0000
+             0.012 |      119          15 |    0.0000
+             0.014 |      137          16 |    0.0000
+             0.016 |      155          20 |    0.0000
+             0.018 |      170          21 |    0.0000
+-----------------------------------------------------
+
+. rddensity reportwealth4, h(0.05)
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      5651        4349          BW method     =       manual
+Eff. Number of obs |       269         213          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.050       0.050
+
+Running variable: reportwealth4.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |   -0.0353      0.9718
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |       11           9 |    0.8238
+             0.004 |       18          17 |    1.0000
+             0.006 |       31          24 |    0.4188
+             0.008 |       44          35 |    0.3682
+             0.010 |       49          45 |    0.7572
+             0.012 |       62          56 |    0.6455
+             0.014 |       69          67 |    0.9317
+             0.016 |       78          74 |    0.8078
+             0.018 |       95          82 |    0.3671
+             0.020 |      105          94 |    0.4785
+-----------------------------------------------------
+
+. 
+. rddensity reportwealth1, h(0.01)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      4977        5023          BW method     =       manual
+Eff. Number of obs |        50          54          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.010       0.010
+
+Running variable: reportwealth1.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    0.3552      0.7224
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |        9          11 |    0.8238
+             0.003 |       11          16 |    0.4421
+             0.004 |       18          19 |    1.0000
+             0.005 |       21          22 |    1.0000
+             0.006 |       28          30 |    0.8957
+             0.006 |       32          35 |    0.8072
+             0.007 |       34          43 |    0.3620
+             0.008 |       40          45 |    0.6646
+             0.009 |       46          49 |    0.8376
+             0.010 |       50          54 |    0.7688
+-----------------------------------------------------
+
+. rddensity reportwealth2, h(0.01)
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      4967        5033          BW method     =       manual
+Eff. Number of obs |        50          57          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.010       0.010
+
+Running variable: reportwealth2.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    1.5441      0.1226
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |        8          12 |    0.5034
+             0.003 |       12          19 |    0.2810
+             0.004 |       20          24 |    0.6516
+             0.005 |       28          30 |    0.8957
+             0.006 |       31          33 |    0.9007
+             0.007 |       38          40 |    0.9099
+             0.007 |       41          45 |    0.7465
+             0.008 |       45          50 |    0.6817
+             0.009 |       47          54 |    0.5507
+             0.010 |       50          57 |    0.5621
+-----------------------------------------------------
+
+. rddensity reportwealth3, h(0.01)
+Bandwidth h may be too small.
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      6052        3948          BW method     =       manual
+Eff. Number of obs |        99          12          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.010       0.010
+
+Running variable: reportwealth3.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |   -1.9662      0.0493
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |       18           2 |    0.0004
+             0.003 |       23           4 |    0.0003
+             0.004 |       34           5 |    0.0000
+             0.005 |       45           7 |    0.0000
+             0.005 |       55           7 |    0.0000
+             0.006 |       63           7 |    0.0000
+             0.007 |       69           9 |    0.0000
+             0.008 |       83          10 |    0.0000
+             0.009 |       92          10 |    0.0000
+             0.010 |       99          12 |    0.0000
+-----------------------------------------------------
+
+. rddensity reportwealth4, h(0.01)
+
+Point estimates and standard errors have been adjusted for repeated observations.
+(Use option nomasspoints to suppress this adjustment.)
+
+RD Manipulation test using local polynomial density estimation.
+
+     c =     0.000 | Left of c  Right of c          Number of obs =        10000
+-------------------+----------------------          Model         = unrestricted
+     Number of obs |      5651        4349          BW method     =       manual
+Eff. Number of obs |        50          47          Kernel        =   triangular
+    Order est. (p) |         2           2          VCE method    =    jackknife
+    Order bias (q) |         3           3
+       BW est. (h) |     0.010       0.010
+
+Running variable: reportwealth4.
+------------------------------------------
+            Method |      T          P>|T|
+-------------------+----------------------
+            Robust |    0.6028      0.5466
+------------------------------------------
+
+P-values of binomial tests. (H0: prob = .5)
+-----------------------------------------------------
+ Window Length / 2 |       <c         >=c |     P>|T|
+-------------------+----------------------+----------
+             0.002 |       11           9 |    0.8238
+             0.003 |       14          16 |    0.8555
+             0.004 |       18          17 |    1.0000
+             0.005 |       25          19 |    0.4514
+             0.006 |       31          22 |    0.2717
+             0.006 |       34          27 |    0.4426
+             0.007 |       38          30 |    0.3961
+             0.008 |       45          36 |    0.3742
+             0.009 |       48          39 |    0.3912
+             0.010 |       50          47 |    0.8392
+-----------------------------------------------------
+
+. 
+. 
+. /* (c) Now, let’s do a more sophisticated test. McCrary and Kovak have developed code to test
+> a density change at the cutoff. First, place the file DCdensity.ado in your .ado directory.
+> The code will generate an estimate of the (log) difference in density at the discontinuity
+> as well as a standard error, from which you can calculate a T-stat and p-value. Report
+> your p-values for each of the four measures,and briefly comment on these results. */ 
+. 
+.  
+. DCdensity reportwealth1, breakpoint(0) generate(Xj Yj r0 fhat se)
+Using default bin size calculation, bin size = .011487376
+Using default bandwidth calculation, bandwidth = .26339997
+
+Discontinuity estimate (log difference in height): -.002235481
+                                                   (.085676167)
+Performing LLR smoothing.
+176 iterations will be performed 
+.................
+
+. graph save Graph "$path_graph/2c)DCdense_rw1.gph", replace
+(note: file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdens
+> e_rw1.gph not found)
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdense_rw1.
+> gph saved)
+
+. 
+. DCdensity reportwealth2, breakpoint(0) generate(Xj2 Yj2 r02 fhat2 se2)
+Using default bin size calculation, bin size = .011686778
+Using default bandwidth calculation, bandwidth = .302899972
+
+Discontinuity estimate (log difference in height): .078432421
+                                                   (.078725724)
+Performing LLR smoothing.
+220 iterations will be performed 
+......................
+
+. graph save Graph "$path_graph/2c)DCdense_rw2.gph", replace
+(note: file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdens
+> e_rw2.gph not found)
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdense_rw2.
+> gph saved)
+
+. 
+. DCdensity reportwealth3, breakpoint(0) generate(Xj3 Yj3 r03 fhat3 se3)
+Using default bin size calculation, bin size = .011456413
+Using default bandwidth calculation, bandwidth = .263668198
+
+Discontinuity estimate (log difference in height): -2.35850529
+                                                   (.149849725)
+Performing LLR smoothing.
+176 iterations will be performed 
+.................
+
+. graph save Graph "$path_graph/2c)DCdense_rw3.gph", replace
+(note: file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdens
+> e_rw3.gph not found)
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdense_rw3.
+> gph saved)
+
+. 
+. DCdensity reportwealth4, breakpoint(0) generate(Xj4 Yj4 r04 fhat4 se4)
+Using default bin size calculation, bin size = .010841614
+Using default bandwidth calculation, bandwidth = .349000187
+
+Discontinuity estimate (log difference in height): -.147315608
+                                                   (.075072081)
+Performing LLR smoothing.
+186 iterations will be performed 
+..................
+
+. graph save Graph "$path_graph/2c)DCdense_rw4.gph", replace
+(note: file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdens
+> e_rw4.gph not found)
+(file /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/Graphs/2c)DCdense_rw4.
+> gph saved)
+
+. 
+. 
+. 
+. /* (d) For each of the four scenarios, generate a treatment indicator that is equal to 1 if reported
+> wealth is below 0. For each scenario, simulate a variable (e.g., newwalth1 ) as the sum of
+> truewealth, 0.2 × treatment (e.g., the treatment effect = 0.2), and a random error with
+> mean 0, variance 0.01. Summarize new wealth for each scenario and comment on the
+> differences.     */
+. 
+. gen treat1 = reportwealth1 < 0 
+
+. gen treat2 = reportwealth2 < 0 
+
+. gen treat3 = reportwealth3 < 0 
+
+. gen treat4 = reportwealth4 < 0 
+
+. 
+. set obs 10000 // number of observations
+number of observations (_N) was 10,000, now 10,000
+
+. gen error = rnormal(0,0.01) // draw 10000 obs randomly from the normal dist with mean and var
+
+. 
+. gen newwealth1 = truewealth + 0.2*treat1 + error
+
+. gen newwealth2 = truewealth + 0.2*treat2 + error
+
+. gen newwealth3 = truewealth + 0.2*treat3 + error
+
+. gen newwealth4 = truewealth + 0.2*treat4 + error
+
+. 
+. sum newwealth1-newwealth4
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  newwealth1 |     10,000    .0970612    .4905673  -.8218188    1.01894
+  newwealth2 |     10,000    .0968612    .4916363  -.8218188    1.01894
+  newwealth3 |     10,000    .1185612    .4976458  -.8218188    1.01894
+  newwealth4 |     10,000    .1105412    .4949326  -.8218188    1.01894
+
+. 
+. 
+. 
+. /*    (e) Use the regress command to conduct a regression discontinuity analysis of the effect of the
+> program in the 4 scenarios. Control for the running variable (reported wealth) separately
+> (and linearly) on each side of the discontinuity. Try using different “bandwidths” by
+> restricting your estimation to observations within a fixed distance from 0. */
+. 
+. 
+. reg newwealth1 treat1 reportwealth1
+
+      Source |       SS           df       MS      Number of obs   =    10,000
+-------------+----------------------------------   F(2, 9997)      >  99999.00
+       Model |  2405.33251         2  1202.66626   Prob > F        =    0.0000
+    Residual |  .989240491     9,997  .000098954   R-squared       =    0.9996
+-------------+----------------------------------   Adj R-squared   =    0.9996
+       Total |  2406.32175     9,999  .240656241   Root MSE        =    .00995
+
+-------------------------------------------------------------------------------
+   newwealth1 |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+--------------+----------------------------------------------------------------
+       treat1 |   .1992442    .000396   503.18   0.000      .198468    .2000203
+reportwealth1 |   .9994331   .0003447  2899.29   0.000     .9987574    1.000109
+        _cons |   .0005619     .00022     2.55   0.011     .0001305    .0009932
+-------------------------------------------------------------------------------
+
+. est store ols_rd1, title("OLS RD1")
+
+. 
+. reg newwealth2 treat2 reportwealth2
+
+      Source |       SS           df       MS      Number of obs   =    10,000
+-------------+----------------------------------   F(2, 9997)      >  99999.00
+       Model |  2318.81816         2  1159.40908   Prob > F        =    0.0000
+    Residual |  98.0021946     9,997   .00980316   R-squared       =    0.9594
+-------------+----------------------------------   Adj R-squared   =    0.9594
+       Total |  2416.82035     9,999  .241706206   Root MSE        =    .09901
+
+-------------------------------------------------------------------------------
+   newwealth2 |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+--------------+----------------------------------------------------------------
+       treat2 |   .1657395   .0038906    42.60   0.000     .1581133    .1733658
+reportwealth2 |   .9430283   .0033291   283.27   0.000     .9365026    .9495541
+        _cons |   .0176223    .002163     8.15   0.000     .0133824    .0218622
+-------------------------------------------------------------------------------
+
+. est store ols_rd2, title("OLS RD2")
+
+. 
+. reg newwealth3 treat3 reportwealth3
+
+      Source |       SS           df       MS      Number of obs   =    10,000
+-------------+----------------------------------   F(2, 9997)      =  99616.85
+       Model |  2357.95053         2  1178.97526   Prob > F        =    0.0000
+    Residual |  118.315485     9,997  .011835099   R-squared       =    0.9522
+-------------+----------------------------------   Adj R-squared   =    0.9522
+       Total |  2476.26601     9,999  .247651366   Root MSE        =    .10879
+
+-------------------------------------------------------------------------------
+   newwealth3 |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+--------------+----------------------------------------------------------------
+       treat3 |   .3693924   .0045301    81.54   0.000     .3605124    .3782724
+reportwealth3 |   1.108055   .0038659   286.62   0.000     1.100477    1.115633
+        _cons |  -.0624481   .0028308   -22.06   0.000     -.067997   -.0568993
+-------------------------------------------------------------------------------
+
+. est store ols_rd3, title("OLS RD3")
+
+. 
+. reg newwealth4 treat4 reportwealth4
+
+      Source |       SS           df       MS      Number of obs   =    10,000
+-------------+----------------------------------   F(2, 9997)      =  58626.59
+       Model |  2256.91394         2  1128.45697   Prob > F        =    0.0000
+    Residual |  192.424379     9,997  .019248212   R-squared       =    0.9214
+-------------+----------------------------------   Adj R-squared   =    0.9214
+       Total |  2449.33832     9,999  .244958328   Root MSE        =    .13874
+
+-------------------------------------------------------------------------------
+   newwealth4 |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+--------------+----------------------------------------------------------------
+       treat4 |     .20235   .0054619    37.05   0.000     .1916435    .2130565
+reportwealth4 |   1.030206   .0049953   206.23   0.000     1.020414    1.039997
+        _cons |   .0772414   .0030859    25.03   0.000     .0711924    .0832904
+-------------------------------------------------------------------------------
+
+. est store ols_rd4, title("OLS RD4")
+
+. 
+. 
+. estout ols_rd1 ols_rd2 ols_rd3 ols_rd4, cells(b(star fmt(5)) se(par fmt(4)))   /// add standard errors and stars to in
+> dicate that the coefficients are statistically significant
+> legend label varlabels(_cons constant)               ///
+> stats(r2 df_r bic, fmt(3 0 1) label(R-sqr dfres BIC)) // add R-squared, residual degrees of freedom and BIC, and adjus
+> t the number of decimal places to display for each item
+
+------------------------------------------------------------------------------------
+                          OLS RD1         OLS RD2         OLS RD3         OLS RD4   
+                             b/se            b/se            b/se            b/se   
+------------------------------------------------------------------------------------
+treat1                    0.19924***                                                
+                         (0.0004)                                                   
+reportwealth1             0.99943***                                                
+                         (0.0003)                                                   
+treat2                                    0.16574***                                
+                                         (0.0039)                                   
+reportwealth2                             0.94303***                                
+                                         (0.0033)                                   
+treat3                                                    0.36939***                
+                                                         (0.0045)                   
+reportwealth3                                             1.10805***                
+                                                         (0.0039)                   
+treat4                                                                    0.20235***
+                                                                         (0.0055)   
+reportwealth4                                                             1.03021***
+                                                                         (0.0050)   
+constant                  0.00056*        0.01762***     -0.06245***      0.07724***
+                         (0.0002)        (0.0022)        (0.0028)        (0.0031)   
+------------------------------------------------------------------------------------
+R-sqr                       1.000           0.959           0.952           0.921   
+dfres                        9997            9997            9997            9997   
+BIC                      -63805.2        -17847.1        -15963.5        -11100.0   
+------------------------------------------------------------------------------------
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. 
+. 
+. /*   (f) Re-do the analysis using the rdrobust command. What do you find? (Note: rdrobust
+> assumes that treatment is 1 above 0, so your estimates will have opposite signs.) */
+. 
+. rdrobust newwealth1 reportwealth1 treat1
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10000
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4977        5023            Kernel        = Triangular
+Eff. Number of obs |      1371        1417            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     0.272       0.272
+       BW bias (b) |     0.416       0.416
+         rho (h/b) |     0.654       0.654
+
+Outcome: newwealth1. Running variable: reportwealth1.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.19916     .00082   -2.4e+02 0.000   -.200763     -.197566
+            Robust |     -          -     -2.0e+02 0.000   -.200981     -.197149
+--------------------------------------------------------------------------------
+
+. est store rd_rob1, title("RD Robust 1")
+
+. 
+. rdrobust newwealth2 reportwealth2 treat2 
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10000
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      4967        5033            Kernel        = Triangular
+Eff. Number of obs |      1394        1513            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     0.286       0.286
+       BW bias (b) |     0.435       0.435
+         rho (h/b) |     0.657       0.657
+
+Outcome: newwealth2. Running variable: reportwealth2.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.19826     .00852   -23.2611 0.000   -.214969     -.181558
+            Robust |     -          -     -19.3449 0.000   -.216784     -.176898
+--------------------------------------------------------------------------------
+
+. est store rd_rob2, title("RD Robust 2")
+
+. 
+. rdrobust newwealth3 reportwealth3 treat3 
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10000
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      6052        3948            Kernel        = Triangular
+Eff. Number of obs |      1568         317            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     0.187       0.187
+       BW bias (b) |     0.361       0.361
+         rho (h/b) |     0.516       0.516
+
+Outcome: newwealth3. Running variable: reportwealth3.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.28774     .00731   -39.3441 0.000   -.302078     -.273409
+            Robust |     -          -     -34.5204 0.000   -.301054     -.268705
+--------------------------------------------------------------------------------
+
+. est store rd_rob3, title("RD Robust 3")
+
+. 
+. rdrobust newwealth4 reportwealth4 treat4 
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =      10000
+-------------------+----------------------            BW type       =      mserd
+     Number of obs |      5651        4349            Kernel        = Triangular
+Eff. Number of obs |      1253        1152            VCE method    =         NN
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     0.225       0.225
+       BW bias (b) |     0.340       0.340
+         rho (h/b) |     0.662       0.662
+
+Outcome: newwealth4. Running variable: reportwealth4.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.21069     .01469   -14.3392 0.000   -.239488     -.181892
+            Robust |     -          -     -11.8387 0.000   -.245514     -.175768
+--------------------------------------------------------------------------------
+
+. est store rd_rob4, title("RD Robust 4")
+
+. 
+. 
+. estout rd_rob1 rd_rob2 rd_rob3 rd_rob4, cells(b(star fmt(5)) se(par fmt(4)))   /// add standard errors and stars to in
+> dicate that the coefficients are statistically significant
+> legend label varlabels(_cons constant)               ///
+> stats(r2 df_r bic, fmt(3 0 1) label(R-sqr dfres BIC)) // add R-squared, residual degrees of freedom and BIC, and adjus
+> t the number of decimal places to display for each item
+
+------------------------------------------------------------------------------------
+                      RD Robust 1     RD Robust 2     RD Robust 3     RD Robust 4   
+                             b/se            b/se            b/se            b/se   
+------------------------------------------------------------------------------------
+RD_Estimate              -0.19916***     -0.19826***     -0.28774***     -0.21069***
+                         (0.0008)        (0.0085)        (0.0073)        (0.0147)   
+------------------------------------------------------------------------------------
+R-sqr                                                                               
+dfres                                                                               
+BIC                             .               .               .               .   
+------------------------------------------------------------------------------------
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/sudikshajoshi/Desktop/Fall 2022/ECON587 Microeconometrics/Problem Sets/Problem Set 5/PS5Codes.log
+  log type:  text
+ closed on:  20 Nov 2022, 08:46:52
+------------------------------------------------------------------------------------------------------------------------
