@@ -1,5 +1,5 @@
 # run entire script at once 
-source("TA Session Week 4.R", echo = TRUE)
+source("TA Session Week 4 by Raj Datta.R", echo = TRUE)
 
 rm(list=ls())
 
